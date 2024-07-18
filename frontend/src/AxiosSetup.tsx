@@ -4,7 +4,7 @@ import { useUser } from './UserContext/Context';
 
 const AxiosSetup = () => {
   const { token, setToken, Auth, setAuth, userInfo, setUserInfo } = useUser();
-
+  axios.defaults.baseURL = 'http://localhost:5000';
   axios.interceptors.request.use(
     config => {
       if (token) {

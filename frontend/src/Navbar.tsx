@@ -12,7 +12,7 @@ export default function Navbar() {
     useEffect(() => {
         async function getDetails() {
             if (Auth) {
-                const data = await axios.post('http://localhost:5000/user/getinfo');
+                const data = await axios.post("/user/getinfo");
                 setUserInfo(data.data);
             }
         }

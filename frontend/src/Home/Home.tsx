@@ -10,7 +10,7 @@ export default function Home() {
     
     useEffect(()=>{
         async function fetchEvent() {
-            const data = await axios.get("http://localhost:5000/event/list");
+            const data = await axios.get("/event");
             setEvent(data.data);
         }
         fetchEvent();
@@ -20,7 +20,7 @@ export default function Home() {
         async function getRegisteredEvents() {
             if (Auth) {
                 try {
-                    const res = await axios.get('http://localhost:5000/event/registered');
+                    const res = await axios.get('/team/user');
                     setRegisteredEvents(res.data);
                 } catch (e) {
                     console.log(e);
@@ -30,7 +30,8 @@ export default function Home() {
         getRegisteredEvents();
     }, [Auth]);
 
-    console.log(token);
+    console.log(registeredEvents);
+    
     return (
         <>
             <Navbar/>

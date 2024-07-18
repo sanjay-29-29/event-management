@@ -44,7 +44,7 @@ export default function SignIn({ setMessage }) {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            const res = await axios.post('http://localhost:5000/login', {
+            const res = await axios.post('/login', {
                 "email": values.email,
                 "password": values.password
             });
