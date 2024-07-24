@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input"
 import { error, SignUpSucess } from './StatusComponent';
 import axios from "axios"
 import { useRef } from "react"
+import { useNavigate } from "react-router-dom"
 
 export default function SignUp({ setMessage }) {
 
     const formSchema = z.object({
-        name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+        first_name: z.string().min(2, { message: "First Name must be at least 2 characters." }).regex(/^[A-Za-z]+$/, { message: "Name must only contain alphabets" }),
+        last_name: z.string().min(1, { message: "Last Name must not be empty." }).regex(/^[A-Za-z]+$/, { message: "Name must only contain alphabets" }),
         email: z.string().min(1, { message: "Email is required." })
             .email({ message: "Invalid email format." }),
         password: z.string()
@@ -39,7 +41,7 @@ export default function SignUp({ setMessage }) {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             const res = await axios.post('/signup', {
-                "name": values.name,
+                "name": values.first_name + " " + values.last_name,
                 "email": values.email,
                 "password": values.password
             });
@@ -74,19 +76,35 @@ export default function SignUp({ setMessage }) {
             <Form {...form}>
                 <div className='font-bold text-3xl py-4'>SignUp</div>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="flex space-x-2">
+                        <FormField
+                            control={form.control}
+                            name="first_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>First Name</FormLabel>
+                                    <FormControl>
+                                        <Input className="" placeholder="First Name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="last_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Last Name</FormLabel>
+                                    <FormControl>
+                                        <Input className="" placeholder="Last Name" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     <FormField
                         control={form.control}
                         name="email"

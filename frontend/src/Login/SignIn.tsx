@@ -71,7 +71,7 @@ export default function SignIn({ setMessage }) {
     return (
         <>
             <Form {...form}>
-                <div className='font-bold text-3xl py-4'>SignUp</div>
+                <div className='font-bold text-3xl py-4'>SignIn</div>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <FormField
                         control={form.control}

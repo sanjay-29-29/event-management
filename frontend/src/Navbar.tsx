@@ -22,14 +22,13 @@ export default function Navbar() {
     return (
         <>
             <div className='flex flex-row p-1'>
-                <Button variant="ghost" onClick={() => { nav('/') }} className="font-md text-lg">Home</Button>
-                <Button variant="ghost" className="font-md text-lg">Events</Button>
-                <Button variant="ghost" className="font-md text-lg"></Button>
+                <button onClick={() => { nav('/') }} className="font-semibold text-base p-2 hover:bg-slate-50">Home</button>
+                <button className="font-semibold text-base p-2 hover:bg-slate-50">Events</button>
                 {Auth && userInfo ?
                     <div onClick={() => nav('/profile')} className="flex-grow justify-end flex">
                         <Avatar>
                             <AvatarImage src="" />
-                            <AvatarFallback>{userInfo.name.slice(0, 1)}</AvatarFallback>
+                            <AvatarFallback className='text-sm'>{userInfo.name.slice(0, 1)}</AvatarFallback>
                         </Avatar>
                         <Button className="pl-2" variant="link">{userInfo.name}</Button>
                     </div>

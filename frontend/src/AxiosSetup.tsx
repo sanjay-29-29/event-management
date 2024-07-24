@@ -1,21 +1,30 @@
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; // If you're using react-router for navigation
 import { useUser } from './UserContext/Context';
+import { useEffect } from 'react';
 
 const AxiosSetup = () => {
   const { token, setToken, Auth, setAuth, userInfo, setUserInfo } = useUser();
   axios.defaults.baseURL = 'http://localhost:5000';
-  axios.interceptors.request.use(
-    config => {
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+
+  useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use(
+      config => {
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => {
+        return Promise.reject(error);
       }
-      return config;
-    },
-    error => {
-      return Promise.reject(error);
-    }
-  );
+    );
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+    };
+  }, [Auth, token, userInfo]);
+
+
 
   axios.interceptors.response.use(
     response => response,
@@ -28,8 +37,10 @@ const AxiosSetup = () => {
       return Promise.reject(error);
     }
   );
-
-  return null;
+  return null
 };
+
+
+
 
 export default AxiosSetup;

@@ -22,9 +22,14 @@ import { useUser } from '../UserContext/Context';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import axios from 'axios';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/avatar"
 import { z } from "zod"
 import {
     Form,
@@ -41,19 +46,43 @@ import {
     InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useNavigate } from "react-router-dom"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
 
 export default function EventTile({ data, registeredEvents }) {
     const { Auth } = useUser();
     const [isRegistered, setIsRegistered] = useState(false);
     const nav = useNavigate();
+    const intervalRef = useRef();
     const [option, setOption] = useState('initial');
     const [response, setResponse] = useState([]);
+    const [error, setError] = useState(false);
+    const [teamdetails, setTeamDetails] = useState([]);
+    const intervalRef2 = useRef();
+    const [error2, setError2] = useState(false);
 
-    useEffect(()=>{
-        if(Auth){
+    useEffect(() => {
+        if (Auth) {
             setIsRegistered(registeredEvents.some(e => e.event.id === data.id));
         }
-    },[Auth, registeredEvents])
+    }, [Auth, registeredEvents])
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
 
     // Define schemas for form validation using Zod
     const teamNameSchema = z.object({
@@ -84,6 +113,7 @@ export default function EventTile({ data, registeredEvents }) {
                 team_name: values.team_name,
             });
             setResponse(response.data);
+            setIsRegistered(true);
             setOption('create_final');
         } catch (error) {
             console.error(error);
@@ -93,12 +123,52 @@ export default function EventTile({ data, registeredEvents }) {
     // Function to handle joining a team
     async function onSubmitJoin(values: z.infer<typeof teamIdSchema>) {
         try {
-            console.log(values);
+            const respone = await axios.get('/team', {
+                params: {
+                    teamId: values.team_id
+                }
+            });
+            if (respone.data === "") {
+                setError(true);
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                }
+                intervalRef.current = setInterval(() => {
+                    setError(false);
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }, 2000);
+            } else {
+                setTeamDetails(respone.data);
+                setOption('join_final')
+            }
         } catch (error) {
             console.error(error);
         }
     }
 
+    async function soloEventRegister(){
+        try{
+            const respone = axios.post('/team',{
+                eventId : data.id
+            });
+            if(respone.status === 200){
+                setIsRegistered(true);
+            }
+            console.log(respone);
+        } catch(e){
+            setError2(true);
+            if(intervalRef2.current){
+                intervalRef2.current = null;
+            }
+            intervalRef2.current = setTimeout(() => {
+                setError2(false);
+                clearInterval(intervalRef2.current);
+                intervalRef2.current = null;
+            }, 2000);
+            console.log(e);
+        }
+    }
 
     return (
         <>
@@ -106,24 +176,53 @@ export default function EventTile({ data, registeredEvents }) {
                 <CardHeader>
                     <CardTitle>{data.name}</CardTitle>
                     <CardDescription>{data.details}</CardDescription>
-                    <div className="flex flex-row"><div className="font-bold text-md mr-2">Time : </div>{new Date(data.date_time).toLocaleTimeString()}</div>
+                    <div className="flex flex-row"><div className="text-md mr-2">Time : </div>{new Date(data.date_time).toLocaleTimeString()}</div>
                     <div className="flex flex-row"><div className="font-bold text-md mr-2">Date :</div>{new Date(data.date_time).toLocaleDateString()}</div>
                     <div className="flex flex-row"><div className="font-bold text-md mr-2">Team Size :</div>{data.team_size}</div>
-                    <div className="flex flex-row"><div className="font-bold text-md mr-2">Organizer :</div> {data.organizer}</div>
                 </CardHeader>
                 <CardFooter>
                     <Dialog>
                         <DialogTrigger asChild>
-                            {!isRegistered ? 
-                            <Button onClick={() => { 
-                                setOption('initial')
-                                if(!Auth){
-                                    nav('/login')
-                                }
-                            }} >Register
-                            </Button>
-                            :
-                            <Button disabled>Registered</Button>
+                            {!isRegistered ?
+                                (
+                                    data.team_size > 1 ?
+                                    <Button onClick={() => {
+                                        setOption('initial')
+                                        if (!Auth) {
+                                            nav('/login')
+                                        }
+                                    }} >Register
+                                    </Button>
+                                    :
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button onClick={()=>{
+                                                if (!Auth) {
+                                                    nav('/login')
+                                                }}}>Register</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Once registered the action cannot be undone.
+                                                {error2 && 
+                                                    <div className="flex justify-end">
+                                                        <p className='text-clip text-destructive'>An Error Occured</p>
+                                                    </div>
+                                                }
+                                            </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={soloEventRegister}>Continue</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                        </AlertDialog>
+                                )
+                                :
+                                <Button disabled>Registered</Button>
                             }
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
@@ -131,9 +230,9 @@ export default function EventTile({ data, registeredEvents }) {
                             {option === 'initial' && (
                                 <div className="w-full">
                                     <div className="flex">
-                                        <button onClick={() => { setOption('create') }}><div className="text-2xl border-r p-4">
+                                        <button onClick={() => { setOption('create') }}><div className="text-2xl p-4 border-r">
                                             Create a Team
-                                            <p className="text-muted-foreground text-sm">This event can have a maxiumum of {data.team_size} members</p>
+                                            <p className="text-muted-foreground font-normal text-sm">This event can have a maxiumum of {data.team_size} members</p>
                                         </div></button>
                                         <button onClick={() => { setOption('join') }}><div className="text-2xl p-4">
                                             Join a Team
@@ -167,7 +266,7 @@ export default function EventTile({ data, registeredEvents }) {
                                                             </FormItem>
                                                         )}
                                                     />
-                                                    <Button type="submit">Submit</Button>
+                                                    <Button type="submit">Create</Button>
                                                 </form>
                                             </Form >
                                         </div>
@@ -178,8 +277,8 @@ export default function EventTile({ data, registeredEvents }) {
                                 <>
                                     <DialogHeader>
                                         <DialogTitle>TeamID</DialogTitle>
-                                        <DialogDescription>formSchema
-                                            Anyone who has this code will be able to join your team.
+                                        <DialogDescription>
+                                            Share this code to your teamates. Anyone who has this code will be able to join your team.
                                         </DialogDescription>
                                     </DialogHeader>
                                     <div className="flex items-center space-x-2">
@@ -231,15 +330,20 @@ export default function EventTile({ data, registeredEvents }) {
                                                         </FormControl>
                                                         <FormDescription>
                                                             Please enter the TeamID.
+                                                            {error && (<p className="text-red-600">A team with given TeamID doesnt exist.</p>)}
                                                         </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
-
                                             <Button type="submit">Submit</Button>
                                         </form>
                                     </Form>
+                                </>
+                            )}
+                            {option === 'join_final' && (
+                                <>
+                                       
                                 </>
                             )}
                         </DialogContent>

@@ -3,18 +3,19 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useUser } from '../UserContext/Context';
 import Navbar from '../Navbar';
+
 export default function Home() {
     const { Auth, token } = useUser();
     const [event, setEvent] = useState([]);
     const [registeredEvents, setRegisteredEvents] = useState([]);
-    
-    useEffect(()=>{
+
+    useEffect(() => {
         async function fetchEvent() {
             const data = await axios.get("/event");
             setEvent(data.data);
         }
         fetchEvent();
-    },[])
+    }, [])
 
     useEffect(() => {
         async function getRegisteredEvents() {
@@ -30,14 +31,22 @@ export default function Home() {
         getRegisteredEvents();
     }, [Auth]);
 
-    console.log(registeredEvents);
-    
     return (
         <>
-            <Navbar/>
+            
+            <Navbar />
+            {event.length > 1 ?
+            (
             <div className='grid md:grid-cols-2 lg:grid-cols-3 grid-auto-cols 2xl:grid-cols-5 xl:grid-cols-3 gap-3 lg:m-2 justify-center'>
-                {event.map((data,index) => (<EventTile key={index} data={data} registeredEvents={registeredEvents}/>))}
+                {event.map((data, index) => (<EventTile key={index} data={data} registeredEvents={registeredEvents} />))}
             </div>
+            )
+            :
+            (
+            <div className='flex justify-center text-md p-4'>
+                There are no events to display.
+            </div>
+            )}
         </>
     )
 }

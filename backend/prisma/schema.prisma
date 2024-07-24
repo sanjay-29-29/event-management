@@ -13,33 +13,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Event {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  details           String    
-  organizer         String
-  date_time         DateTime            @default(now())
-  team_size         Int                 @default(1)
-  participants      Participant[]       @relation("ParticipantEvents")
-  ParticipantEvents ParticipantEvents[]
+model Team {
+  team_id      String        @id @default(uuid())
+  team_name    String?
+  event_id     Int
+  event        Event         @relation(fields: [event_id], references: [id])
+  team_lead_id String
+  team_lead    Participant   @relation("TeamLead", fields: [team_lead_id], references: [id])
+  team_members Participant[] @relation("TeamMembers")
+
+  @@unique([event_id, team_lead_id])
 }
 
 model Participant {
-  id                String              @id @default(uuid())
-  name              String
-  email             String              @unique
-  password          String
-  date_time         DateTime            @default(now())
-  events            Event[]             @relation("ParticipantEvents")
-  role              String              @default("Participant")
-  ParticipantEvents ParticipantEvents[]
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  date_time DateTime @default(now())
+  role      String   @default("Participant")
+  ledTeams  Team[]   @relation("TeamLead")
+  teams     Team[]   @relation("TeamMembers")
 }
 
-model ParticipantEvents {
-  eventId       Int
-  participantId String 
-  event         Event       @relation(fields: [eventId], references: [id])
-  participant   Participant @relation(fields: [participantId], references: [id])
-
-  @@id([eventId, participantId])
+model Event {
+  id        Int      @id @default(autoincrement())
+  name      String
+  details   String
+  organizer String
+  date_time DateTime @default(now())
+  team_size Int      @default(1)
+  teams     Team[]
 }
+

@@ -5,9 +5,10 @@ const auth_user = (req, res, next) => {
     const token = req.header('Authorization').replace('Bearer ', '');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+    console.log('api')
     next();
   } catch (e) {
-    res.status(401).send({ error: 'Please authenticate.' });
+    res.status(401).send({ error: 'Token expired. Please authenticate.' });
   }
 };
 
